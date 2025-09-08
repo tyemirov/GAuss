@@ -10,6 +10,10 @@ const (
 	ScopeProfile Scope = "profile"
 	// ScopeYouTubeReadonly allows read-only access to YouTube resources.
 	ScopeYouTubeReadonly Scope = "https://www.googleapis.com/auth/youtube.readonly"
+	// ScopeYouTube allows API changes of YouTube resources.
+	ScopeYouTube Scope = "https://www.googleapis.com/auth/youtube" // manage account (needed)
+	// ScopeYouTubeUpload allows video upload to YouTube resources.
+	ScopeYouTubeUpload Scope = "https://www.googleapis.com/auth/youtube.upload"
 )
 
 // DefaultScopes lists the scopes used when none are provided to NewService.
