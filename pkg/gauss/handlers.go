@@ -109,7 +109,9 @@ func (handlersInstance *Handlers) Login(responseWriter http.ResponseWriter, requ
 		return
 	}
 
-	authorizationURL := handlersInstance.service.config.AuthCodeURL(
+	oauthConfig := handlersInstance.service.authorizationConfigForRequest(request)
+
+	authorizationURL := oauthConfig.AuthCodeURL(
 		stateValue,
 		oauth2.AccessTypeOffline,
 		oauth2.SetAuthURLParam("prompt", "consent"),
@@ -143,7 +145,9 @@ func (handlersInstance *Handlers) Callback(responseWriter http.ResponseWriter, r
 		return
 	}
 
-	oauthToken, tokenExchangeError := handlersInstance.service.config.Exchange(request.Context(), authorizationCode)
+	oauthConfig := handlersInstance.service.authorizationConfigForRequest(request)
+
+	oauthToken, tokenExchangeError := oauthConfig.Exchange(request.Context(), authorizationCode)
 	if tokenExchangeError != nil {
 		log.Printf("Token exchange failed: %v", tokenExchangeError)
 		http.Redirect(responseWriter, request, constants.LoginPath+"?error=token_exchange_failed", http.StatusFound)
@@ -157,7 +161,7 @@ func (handlersInstance *Handlers) Callback(responseWriter http.ResponseWriter, r
 	}
 
 	hasProfileScope := false
-	for _, scope := range handlersInstance.service.config.Scopes {
+	for _, scope := range oauthConfig.Scopes {
 		if scope == string(ScopeProfile) || scope == string(ScopeEmail) {
 			hasProfileScope = true
 			break

@@ -12,6 +12,7 @@ that you can easily authenticate users with Google and manage their sessions. A 
 - **Session Management** using [gorilla/sessions](https://github.com/gorilla/sessions)
 - **Embeddable Templates** for the login page (default or custom)
 - **Dashboard** showing user information after login
+- **Reverse Proxy Awareness** that respects forwarded headers when computing redirects
 
 ---
 
@@ -42,6 +43,7 @@ Set the following environment variables before running GAuss:
 - `GOOGLE_CLIENT_ID` – Your Google OAuth2 client ID.
 - `GOOGLE_CLIENT_SECRET` – Your Google OAuth2 client secret.
 - `SESSION_SECRET` – The secret key for signing sessions.
+- `PUBLIC_BASE_URL` – Optional external base URL used for redirect construction (`http://localhost:8080` by default).
 
 For example, you might place them in an `.env` file (excluded from version control):
 
@@ -49,6 +51,7 @@ For example, you might place them in an `.env` file (excluded from version contr
 GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 SESSION_SECRET="random-secret"
+PUBLIC_BASE_URL="http://localhost:8080"
 # Callback URL configured in Google Cloud Console
 # http://localhost:8080/auth/google/callback
 ```
@@ -127,6 +130,28 @@ go run examples/user_auth/main.go
 
 Open [http://localhost:8080/](http://localhost:8080/) and authenticate with Google. The demo demonstrates how to mount
 the package’s handlers and how to serve a simple dashboard once the user is logged in.
+
+---
+
+## Reverse Proxy Support
+
+GAuss recalculates the Google `redirect_uri` for every request by inspecting `Forwarded`,
+`X-Forwarded-Proto`, `X-Forwarded-Host`, and `X-Forwarded-Port` headers. You can keep the demo
+listening on HTTP behind a TLS terminator while still issuing HTTPS redirects to Google.
+Ensure your proxy forwards those headers, for example with Nginx:
+
+```nginx
+location / {
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Port $server_port;
+    proxy_pass http://localhost:8080;
+}
+```
+
+Set `PUBLIC_BASE_URL` to your public host (the default `http://localhost:8080` works locally).
+GAuss swaps the scheme or port automatically based on the forwarded metadata.
 
 ---
 

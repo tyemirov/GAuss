@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/temirov/GAuss/pkg/constants"
 	"golang.org/x/oauth2"
@@ -19,6 +20,19 @@ import (
 // Google. It is a variable rather than a constant so tests can replace it with
 // a mock server endpoint.
 var userInfoEndpoint = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+const (
+	headerForwarded        = "Forwarded"
+	headerXForwardedProto  = "X-Forwarded-Proto"
+	headerXForwardedScheme = "X-Forwarded-Scheme"
+	headerXForwardedHost   = "X-Forwarded-Host"
+	headerXForwardedPort   = "X-Forwarded-Port"
+	forwardedProtoPrefix   = "proto="
+	forwardedHostPrefix    = "host="
+	headerValueSeparator   = ","
+	forwardedPairSeparator = ";"
+	defaultHTTPScheme      = "https"
+)
 
 // GoogleUser represents a user profile retrieved from Google.
 type GoogleUser struct {
@@ -35,6 +49,8 @@ type GoogleUser struct {
 // to be used for the login page instead of the embedded "login.html".
 type Service struct {
 	config           *oauth2.Config
+	publicBaseURL    *url.URL
+	callbackPath     *url.URL
 	localRedirectURL string
 	LoginTemplate    string
 }
@@ -60,14 +76,18 @@ func NewService(clientID string, clientSecret string, googleOAuthBase string, lo
 		scopes = ScopeStrings(DefaultScopes)
 	}
 
+	baseConfig := &oauth2.Config{
+		RedirectURL:  redirectURL.String(),
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Scopes:       scopes,
+		Endpoint:     google.Endpoint,
+	}
+
 	return &Service{
-		config: &oauth2.Config{
-			RedirectURL:  redirectURL.String(),
-			ClientID:     clientID,
-			ClientSecret: clientSecret,
-			Scopes:       scopes,
-			Endpoint:     google.Endpoint,
-		},
+		config:           baseConfig,
+		publicBaseURL:    baseURL,
+		callbackPath:     relativePath,
 		localRedirectURL: localRedirectURL,
 		LoginTemplate:    customLoginTemplate,
 	}, nil
@@ -110,4 +130,148 @@ func (serviceInstance *Service) GetUser(oauthToken *oauth2.Token) (*GoogleUser, 
 // configuration and the provided token.
 func (serviceInstance *Service) GetClient(ctx context.Context, token *oauth2.Token) *http.Client {
 	return serviceInstance.config.Client(ctx, token)
+}
+
+func (serviceInstance *Service) authorizationConfigForRequest(request *http.Request) *oauth2.Config {
+	clone := *serviceInstance.config
+	clone.RedirectURL = serviceInstance.redirectURLForRequest(request)
+	return &clone
+}
+
+func (serviceInstance *Service) redirectURLForRequest(request *http.Request) string {
+	if serviceInstance.callbackPath == nil {
+		return serviceInstance.config.RedirectURL
+	}
+
+	baseURL := serviceInstance.effectiveBaseURL(request)
+	if baseURL == nil {
+		return serviceInstance.config.RedirectURL
+	}
+	callback := baseURL.ResolveReference(serviceInstance.callbackPath)
+	return callback.String()
+}
+
+func (serviceInstance *Service) effectiveBaseURL(request *http.Request) *url.URL {
+	if serviceInstance.publicBaseURL == nil {
+		return nil
+	}
+
+	if request == nil {
+		return serviceInstance.publicBaseURL
+	}
+
+	scheme := serviceInstance.resolveScheme(request)
+	host := serviceInstance.resolveHost(request)
+	if host == "" {
+		return serviceInstance.publicBaseURL
+	}
+
+	port := serviceInstance.resolvePort(request)
+	if port != "" && !strings.Contains(host, ":") {
+		host = host + ":" + port
+	}
+
+	baseCopy := *serviceInstance.publicBaseURL
+	baseCopy.Scheme = scheme
+	baseCopy.Host = host
+
+	return &baseCopy
+}
+
+func (serviceInstance *Service) resolveScheme(request *http.Request) string {
+	if forwarded := extractForwardedDirective(request.Header.Get(headerForwarded), forwardedProtoPrefix); forwarded != "" {
+		return strings.ToLower(forwarded)
+	}
+
+	if proto := firstHeaderValue(request.Header.Get(headerXForwardedProto)); proto != "" {
+		return strings.ToLower(proto)
+	}
+
+	if scheme := firstHeaderValue(request.Header.Get(headerXForwardedScheme)); scheme != "" {
+		return strings.ToLower(scheme)
+	}
+
+	if request.TLS != nil {
+		return defaultHTTPScheme
+	}
+
+	if request.URL != nil && request.URL.Scheme != "" {
+		return strings.ToLower(request.URL.Scheme)
+	}
+
+	if serviceInstance.publicBaseURL != nil && serviceInstance.publicBaseURL.Scheme != "" {
+		return strings.ToLower(serviceInstance.publicBaseURL.Scheme)
+	}
+
+	return defaultHTTPScheme
+}
+
+func (serviceInstance *Service) resolveHost(request *http.Request) string {
+	if forwarded := extractForwardedDirective(request.Header.Get(headerForwarded), forwardedHostPrefix); forwarded != "" {
+		return forwarded
+	}
+
+	if host := firstHeaderValue(request.Header.Get(headerXForwardedHost)); host != "" {
+		return host
+	}
+
+	if request.Host != "" {
+		return request.Host
+	}
+
+	if serviceInstance.publicBaseURL != nil {
+		return serviceInstance.publicBaseURL.Host
+	}
+
+	return ""
+}
+
+func (serviceInstance *Service) resolvePort(request *http.Request) string {
+	return firstHeaderValue(request.Header.Get(headerXForwardedPort))
+}
+
+func firstHeaderValue(headerValue string) string {
+	if headerValue == "" {
+		return ""
+	}
+
+	segments := strings.Split(headerValue, headerValueSeparator)
+	for _, segment := range segments {
+		trimmed := strings.TrimSpace(segment)
+		if trimmed != "" {
+			return trimmed
+		}
+	}
+	return ""
+}
+
+func extractForwardedDirective(headerValue string, prefix string) string {
+	if headerValue == "" {
+		return ""
+	}
+
+	directives := strings.Split(headerValue, headerValueSeparator)
+	for _, directive := range directives {
+		trimmedDirective := strings.TrimSpace(directive)
+		if trimmedDirective == "" {
+			continue
+		}
+		pairs := strings.Split(trimmedDirective, forwardedPairSeparator)
+		for _, pair := range pairs {
+			trimmedPair := strings.TrimSpace(pair)
+			if trimmedPair == "" {
+				continue
+			}
+			lower := strings.ToLower(trimmedPair)
+			if !strings.HasPrefix(lower, prefix) {
+				continue
+			}
+			value := strings.TrimSpace(trimmedPair[len(prefix):])
+			value = strings.Trim(value, "\"")
+			if value != "" {
+				return value
+			}
+		}
+	}
+	return ""
 }
