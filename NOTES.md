@@ -11,7 +11,7 @@ Fix issues one by one.
 4. Rerun the tests
 5. Repeat 2-4 untill the issue is fixed and comprehensive tests are passing
 6. Write a nice comprehensive commit message AFTER EACH issue is fixed and tested and covered with tests.
-7. Optiona: update the README in case the changes warrant updated documentation
+7. Optional: update the README in case the changes warrant updated documentation
 8. Optional: ipdate the PRD in case the changes warrant updated product requirements
 9. Optional: update the code examples in case the changes warrant updated code examples
 
