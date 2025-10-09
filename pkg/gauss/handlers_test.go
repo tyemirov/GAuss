@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/temirov/GAuss/pkg/constants"
@@ -39,6 +40,70 @@ func TestLoginRedirect(t *testing.T) {
 	}
 	if len(rr.Header()["Set-Cookie"]) == 0 {
 		t.Fatal("expected session cookie")
+	}
+}
+
+func TestLoginRedirectHonorsForwardedHeaders(t *testing.T) {
+	testCases := []struct {
+		name       string
+		configure  func(*http.Request)
+		wantTarget string
+	}{
+		{
+			name: "x-forwarded-proto sets https",
+			configure: func(r *http.Request) {
+				r.Header.Set("X-Forwarded-Proto", "https")
+			},
+			wantTarget: "https://loopaware.mprlab.com/auth/google/callback",
+		},
+		{
+			name: "forwarded header overrides host",
+			configure: func(r *http.Request) {
+				r.Host = "ignored.example"
+				r.Header.Set("Forwarded", "proto=https; host=forwarded.example")
+			},
+			wantTarget: "https://forwarded.example/auth/google/callback",
+		},
+		{
+			name: "forwarded port appended",
+			configure: func(r *http.Request) {
+				r.Header.Set("X-Forwarded-Proto", "https")
+				r.Header.Set("X-Forwarded-Port", "8443")
+			},
+			wantTarget: "https://loopaware.mprlab.com:8443/auth/google/callback",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			h := newTestHandlers(t)
+			req := httptest.NewRequest("GET", constants.GoogleAuthPath, nil)
+			req.Host = "loopaware.mprlab.com"
+			testCase.configure(req)
+
+			rr := httptest.NewRecorder()
+			h.Login(rr, req)
+
+			if rr.Code != http.StatusFound {
+				t.Fatalf("expected 302, got %d", rr.Code)
+			}
+
+			location := rr.Header().Get("Location")
+			if location == "" {
+				t.Fatal("missing redirect location")
+			}
+
+			locationURL, err := url.Parse(location)
+			if err != nil {
+				t.Fatalf("failed to parse redirect: %v", err)
+			}
+
+			redirectURI := locationURL.Query().Get("redirect_uri")
+			if redirectURI != testCase.wantTarget {
+				t.Fatalf("expected redirect_uri %s, got %s", testCase.wantTarget, redirectURI)
+			}
+		})
 	}
 }
 
