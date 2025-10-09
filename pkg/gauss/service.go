@@ -139,6 +139,10 @@ func (serviceInstance *Service) authorizationConfigForRequest(request *http.Requ
 }
 
 func (serviceInstance *Service) redirectURLForRequest(request *http.Request) string {
+	if serviceInstance.callbackPath == nil {
+		return serviceInstance.config.RedirectURL
+	}
+
 	baseURL := serviceInstance.effectiveBaseURL(request)
 	if baseURL == nil {
 		return serviceInstance.config.RedirectURL
@@ -148,6 +152,10 @@ func (serviceInstance *Service) redirectURLForRequest(request *http.Request) str
 }
 
 func (serviceInstance *Service) effectiveBaseURL(request *http.Request) *url.URL {
+	if serviceInstance.publicBaseURL == nil {
+		return nil
+	}
+
 	if request == nil {
 		return serviceInstance.publicBaseURL
 	}
@@ -191,7 +199,7 @@ func (serviceInstance *Service) resolveScheme(request *http.Request) string {
 		return strings.ToLower(request.URL.Scheme)
 	}
 
-	if serviceInstance.publicBaseURL.Scheme != "" {
+	if serviceInstance.publicBaseURL != nil && serviceInstance.publicBaseURL.Scheme != "" {
 		return strings.ToLower(serviceInstance.publicBaseURL.Scheme)
 	}
 
@@ -211,7 +219,11 @@ func (serviceInstance *Service) resolveHost(request *http.Request) string {
 		return request.Host
 	}
 
-	return serviceInstance.publicBaseURL.Host
+	if serviceInstance.publicBaseURL != nil {
+		return serviceInstance.publicBaseURL.Host
+	}
+
+	return ""
 }
 
 func (serviceInstance *Service) resolvePort(request *http.Request) string {
