@@ -6,7 +6,9 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/temirov/GAuss/pkg/constants"
 	"github.com/temirov/GAuss/pkg/gauss"
@@ -15,9 +17,9 @@ import (
 )
 
 const (
-	DashboardPath = "/dashboard"
-	Root          = "/"
-	appBase       = "http://localhost:8080/"
+	DashboardPath        = "/dashboard"
+	Root                 = "/"
+	defaultPublicBaseURL = "http://localhost:8080"
 )
 
 func main() {
@@ -33,7 +35,9 @@ func main() {
 
 	customLoginTemplate := *loginTemplateFlag
 
-	authService, err := gauss.NewService(googleClientID, googleClientSecret, appBase, DashboardPath, gauss.ScopeStrings(gauss.DefaultScopes), customLoginTemplate)
+	publicBaseURL := determinePublicBaseURL()
+
+	authService, err := gauss.NewService(googleClientID, googleClientSecret, publicBaseURL, DashboardPath, gauss.ScopeStrings(gauss.DefaultScopes), customLoginTemplate)
 	if err != nil {
 		log.Fatalf("Failed to initialize auth service: %v", err)
 	}
@@ -63,7 +67,7 @@ func main() {
 	// Register root handler with middleware.
 	mux.Handle(Root, gauss.AuthMiddleware(http.HandlerFunc(rootHandler)))
 
-	log.Printf("Server starting on :8080")
+	log.Printf("Server starting on :8080 (public base %s)", publicBaseURL)
 	log.Fatal(http.ListenAndServe("localhost:8080", mux))
 }
 
@@ -76,4 +80,12 @@ func rootHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 	// If not logged in, the middleware will handle the redirect to login.
 	http.NotFound(responseWriter, request)
+}
+
+func determinePublicBaseURL() string {
+	envValue := strings.TrimSpace(os.Getenv("PUBLIC_BASE_URL"))
+	if envValue == "" {
+		return defaultPublicBaseURL
+	}
+	return strings.TrimRight(envValue, "/")
 }
