@@ -1,7 +1,6 @@
 # GAuss
 
-GAuss is a Google OAuth2 authentication package written in Go. It is designed to be embedded into your own projects so
-that you can easily authenticate users with Google and manage their sessions. A small demo application is provided under
+GAuss is a Google OAuth2 authentication package written in Go. It is designed to be embedded into other projects to easily authenticate users with Google and manage their sessions. A small demo application is provided under
 `examples/user_auth` to illustrate how the package can be integrated.
 
 ---
