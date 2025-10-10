@@ -180,6 +180,17 @@ svc, err := gauss.NewService(
 
 If the option is omitted or the provided value is empty, GAuss continues redirecting to `/login`.
 
+Because `/login` is the natural entry point for GAuss, many applications mount their public landing page there and simply redirect `/` to `/login`. That keeps login, post-auth, and logout flows aligned without extra plumbing:
+
+```go
+mux := http.NewServeMux()
+mux.Handle("/", http.RedirectHandler("/login", http.StatusFound))
+mux.Handle("/login", landingPageHandler) // renders your marketing page
+mux = gaussHandlers.RegisterRoutes(mux)  // mounts /login, /auth/google, /callback, /logout
+```
+
+When you need to send users elsewhere after logout—such as an externally hosted marketing page—use `WithLogoutRedirectURL` to override the default.
+
 ### Persisting OAuth Tokens
 
 After a successful login the raw OAuth2 token is stored in the session under the key `gauss.SessionKeyOAuthToken`. You
