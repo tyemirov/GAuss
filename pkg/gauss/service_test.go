@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/temirov/GAuss/pkg/constants"
 	"golang.org/x/oauth2"
 )
 
@@ -81,5 +82,25 @@ func TestGetClient(t *testing.T) {
 	// This confirms the client is correctly configured for OAuth2.
 	if _, ok := client.Transport.(*oauth2.Transport); !ok {
 		t.Errorf("Expected client.Transport to be of type *oauth2.Transport, but got %T", client.Transport)
+	}
+}
+
+func TestNewServiceUsesDefaultLogoutRedirect(t *testing.T) {
+	svc, err := NewService("id", "secret", "http://example.com", "/dash", nil, "")
+	if err != nil {
+		t.Fatalf("NewService error: %v", err)
+	}
+	if svc.logoutRedirectURL != constants.LoginPath {
+		t.Fatalf("expected default logout redirect %s, got %s", constants.LoginPath, svc.logoutRedirectURL)
+	}
+}
+
+func TestNewServiceWithLogoutRedirectOption(t *testing.T) {
+	svc, err := NewService("id", "secret", "http://example.com", "/dash", nil, "", WithLogoutRedirectURL("/landing"))
+	if err != nil {
+		t.Fatalf("NewService error: %v", err)
+	}
+	if svc.logoutRedirectURL != "/landing" {
+		t.Fatalf("expected logout redirect /landing, got %s", svc.logoutRedirectURL)
 	}
 }

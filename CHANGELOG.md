@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.0.12] - 2025-10-10
+### Added
+- Introduced `WithLogoutRedirectURL` so applications can choose the post-logout redirect target while defaulting to the login page.
+### Documentation
+- Documented the recommended pattern of serving the public landing experience from `/login` while redirecting `/` to that route.
+
+
 ## [v0.0.11] - 2025-10-09
 ### Added
 - Introduced YouTube-specific OAuth scopes to simplify sample integrations.
