@@ -48,19 +48,38 @@ type GoogleUser struct {
 // The LoginTemplate field, if non-empty, specifies the HTML template filename
 // to be used for the login page instead of the embedded "login.html".
 type Service struct {
-	config           *oauth2.Config
-	publicBaseURL    *url.URL
-	callbackPath     *url.URL
-	localRedirectURL string
-	LoginTemplate    string
+	config            *oauth2.Config
+	publicBaseURL     *url.URL
+	callbackPath      *url.URL
+	localRedirectURL  string
+	logoutRedirectURL string
+	LoginTemplate     string
+}
+
+// ServiceOption customizes optional behavior when creating a Service.
+type ServiceOption func(*Service)
+
+// WithLogoutRedirectURL returns a ServiceOption that overrides the redirect
+// destination used after logout. The redirectURL parameter may be either an
+// absolute URL or a path relative to the application. Empty values are
+// ignored and the default logout redirect is preserved.
+func WithLogoutRedirectURL(redirectURL string) ServiceOption {
+	return func(serviceInstance *Service) {
+		trimmedRedirect := strings.TrimSpace(redirectURL)
+		if trimmedRedirect == "" {
+			return
+		}
+		serviceInstance.logoutRedirectURL = trimmedRedirect
+	}
 }
 
 // NewService initializes a Service with Google OAuth credentials and the local
 // redirect URL where authenticated users will be sent after logging in.
 // googleOAuthBase should point to the publicly reachable URL of your GAuss
 // application (e.g. "http://localhost:8080"). customLoginTemplate may specify
-// a login template file to override the default.
-func NewService(clientID string, clientSecret string, googleOAuthBase string, localRedirectURL string, scopes []string, customLoginTemplate string) (*Service, error) {
+// a login template file to override the default. Additional behavior can be
+// customized by passing ServiceOption values.
+func NewService(clientID string, clientSecret string, googleOAuthBase string, localRedirectURL string, scopes []string, customLoginTemplate string, options ...ServiceOption) (*Service, error) {
 	if clientID == "" || clientSecret == "" {
 		return nil, errors.New("missing Google OAuth credentials")
 	}
@@ -84,13 +103,23 @@ func NewService(clientID string, clientSecret string, googleOAuthBase string, lo
 		Endpoint:     google.Endpoint,
 	}
 
-	return &Service{
-		config:           baseConfig,
-		publicBaseURL:    baseURL,
-		callbackPath:     relativePath,
-		localRedirectURL: localRedirectURL,
-		LoginTemplate:    customLoginTemplate,
-	}, nil
+	serviceInstance := &Service{
+		config:            baseConfig,
+		publicBaseURL:     baseURL,
+		callbackPath:      relativePath,
+		localRedirectURL:  localRedirectURL,
+		logoutRedirectURL: constants.LoginPath,
+		LoginTemplate:     customLoginTemplate,
+	}
+
+	for _, option := range options {
+		if option == nil {
+			continue
+		}
+		option(serviceInstance)
+	}
+
+	return serviceInstance, nil
 }
 
 // GenerateState returns a cryptographically secure random string that is used

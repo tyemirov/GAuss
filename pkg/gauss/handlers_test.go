@@ -14,9 +14,9 @@ import (
 )
 
 // helper to create service and handlers for tests
-func newTestHandlers(t *testing.T) *Handlers {
+func newTestHandlers(t *testing.T, options ...ServiceOption) *Handlers {
 	session.NewSession([]byte("secret"))
-	svc, err := NewService("id", "secret", "http://localhost:8080", "/dashboard", ScopeStrings(DefaultScopes), "")
+	svc, err := NewService("id", "secret", "http://localhost:8080", "/dashboard", ScopeStrings(DefaultScopes), "", options...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,5 +243,55 @@ func TestCallbackSuccess_APIOnlyScopes(t *testing.T) {
 	}
 	if sess2.Values[constants.SessionKeyUserPicture] != nil {
 		t.Fatalf("user picture should not be stored for API-only scopes")
+	}
+}
+
+func TestLogoutRedirectsToLoginByDefault(t *testing.T) {
+	session.NewSession([]byte("secret"))
+	handlers := newTestHandlers(t)
+	request := httptest.NewRequest(http.MethodPost, constants.LogoutPath, nil)
+
+	// Seed the incoming request with a session cookie so that logout clears it.
+	initialRecorder := httptest.NewRecorder()
+	activeSession, _ := session.Store().Get(request, constants.SessionName)
+	activeSession.Values["test"] = "value"
+	activeSession.Save(request, initialRecorder)
+	for _, cookie := range initialRecorder.Result().Cookies() {
+		request.AddCookie(cookie)
+	}
+
+	responseRecorder := httptest.NewRecorder()
+	handlers.Logout(responseRecorder, request)
+
+	if responseRecorder.Code != http.StatusFound {
+		t.Fatalf("expected status %d, got %d", http.StatusFound, responseRecorder.Code)
+	}
+	if location := responseRecorder.Header().Get("Location"); location != constants.LoginPath {
+		t.Fatalf("expected redirect to %s, got %s", constants.LoginPath, location)
+	}
+}
+
+func TestLogoutRedirectUsesConfiguredTarget(t *testing.T) {
+	desiredRedirect := "/"
+	session.NewSession([]byte("secret"))
+	handlers := newTestHandlers(t, WithLogoutRedirectURL(desiredRedirect))
+	request := httptest.NewRequest(http.MethodPost, constants.LogoutPath, nil)
+
+	initialRecorder := httptest.NewRecorder()
+	activeSession, _ := session.Store().Get(request, constants.SessionName)
+	activeSession.Values["test"] = "value"
+	activeSession.Save(request, initialRecorder)
+	for _, cookie := range initialRecorder.Result().Cookies() {
+		request.AddCookie(cookie)
+	}
+
+	responseRecorder := httptest.NewRecorder()
+	handlers.Logout(responseRecorder, request)
+
+	if responseRecorder.Code != http.StatusFound {
+		t.Fatalf("expected status %d, got %d", http.StatusFound, responseRecorder.Code)
+	}
+	if location := responseRecorder.Header().Get("Location"); location != desiredRedirect {
+		t.Fatalf("expected redirect to %s, got %s", desiredRedirect, location)
 	}
 }

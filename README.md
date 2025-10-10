@@ -162,6 +162,24 @@ GAuss swaps the scheme or port automatically based on the forwarded metadata.
 - **`/logout`** – Logs out the user by clearing session data.
 - **`/dashboard`** – Protected route showing user info.
 
+### Customizing the Logout Redirect
+
+GAuss redirects users to `/login` after logout by default. To send users back to a different landing page, pass the `gauss.WithLogoutRedirectURL` option when constructing the service:
+
+```go
+svc, err := gauss.NewService(
+    clientID,
+    clientSecret,
+    publicBaseURL,
+    "/dashboard",
+    gauss.ScopeStrings(gauss.DefaultScopes),
+    "",
+    gauss.WithLogoutRedirectURL("/"),
+)
+```
+
+If the option is omitted or the provided value is empty, GAuss continues redirecting to `/login`.
+
 ### Persisting OAuth Tokens
 
 After a successful login the raw OAuth2 token is stored in the session under the key `gauss.SessionKeyOAuthToken`. You

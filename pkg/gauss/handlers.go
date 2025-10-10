@@ -202,7 +202,7 @@ func (handlersInstance *Handlers) Callback(responseWriter http.ResponseWriter, r
 }
 
 // Logout removes all authentication information from the session and redirects
-// the client to the login page.
+// the client to the configured logout destination.
 func (handlersInstance *Handlers) Logout(responseWriter http.ResponseWriter, request *http.Request) {
 	webSession, _ := handlersInstance.store.Get(request, constants.SessionName)
 	webSession.Options.MaxAge = -1
@@ -210,5 +210,9 @@ func (handlersInstance *Handlers) Logout(responseWriter http.ResponseWriter, req
 		http.Error(responseWriter, webSessionSaveError.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(responseWriter, request, constants.LoginPath, http.StatusFound)
+	redirectTarget := handlersInstance.service.logoutRedirectURL
+	if redirectTarget == "" {
+		redirectTarget = constants.LoginPath
+	}
+	http.Redirect(responseWriter, request, redirectTarget, http.StatusFound)
 }
