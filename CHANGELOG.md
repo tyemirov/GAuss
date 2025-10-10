@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [v0.0.12] - 2025-10-10
 ### Added
 - Introduced `WithLogoutRedirectURL` so applications can choose the post-logout redirect target while defaulting to the login page.
 ### Documentation
