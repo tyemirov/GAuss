@@ -35,8 +35,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/temirov/utils v0.0.6 h1:hgUWj9I0tvrG0qGbuk90+XC9zvhZWR0vnu/vrecPs2c=
-github.com/temirov/utils v0.0.6/go.mod h1:OnP/WDC1sEZyyksI4UOyrl20I9kUjbbtwqfkWjFtbPU=
+github.com/tyemirov/utils v0.0.6 h1:hgUWj9I0tvrG0qGbuk90+XC9zvhZWR0vnu/vrecPs2c=
+github.com/tyemirov/utils v0.0.6/go.mod h1:OnP/WDC1sEZyyksI4UOyrl20I9kUjbbtwqfkWjFtbPU=
 go.opentelemetry.io/auto/sdk v1.1.0 h1:cH53jehLUN6UFLY71z+NDOiNJqDdPRaXzTel0sJySYA=
 go.opentelemetry.io/auto/sdk v1.1.0/go.mod h1:3wSPjt5PWp2RhlCcmmOial7AvC4DQqZb7a7wCow3W8A=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 h1:F7Jx+6hwnZ41NSFTO5q4LYDtJRXBf2PD0rNBkeB/lus=

@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/temirov/GAuss/pkg/constants"
+	"github.com/tyemirov/GAuss/pkg/constants"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

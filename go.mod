@@ -1,10 +1,10 @@
-module github.com/temirov/GAuss
+module github.com/tyemirov/GAuss
 
 go 1.23.4
 
 require (
 	github.com/gorilla/sessions v1.4.0
-	github.com/temirov/utils v0.0.6
+	github.com/tyemirov/utils v0.0.6
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.242.0
 )
