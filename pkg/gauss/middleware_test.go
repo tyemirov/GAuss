@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/temirov/GAuss/pkg/constants"
-	"github.com/temirov/GAuss/pkg/session"
+	"github.com/tyemirov/GAuss/pkg/constants"
+	"github.com/tyemirov/GAuss/pkg/session"
 )
 
 func TestAuthMiddlewareRedirects(t *testing.T) {

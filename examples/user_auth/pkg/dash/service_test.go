@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/sessions"
-	"github.com/temirov/GAuss/pkg/constants"
+	"github.com/tyemirov/GAuss/pkg/constants"
 )
 
 func TestGetUserData(t *testing.T) {

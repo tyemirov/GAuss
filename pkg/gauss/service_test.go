@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/temirov/GAuss/pkg/constants"
+	"github.com/tyemirov/GAuss/pkg/constants"
 	"golang.org/x/oauth2"
 )
 

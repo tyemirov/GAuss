@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/gorilla/sessions"
-	"github.com/temirov/GAuss/pkg/constants"
-	"github.com/temirov/GAuss/pkg/session"
+	"github.com/tyemirov/GAuss/pkg/constants"
+	"github.com/tyemirov/GAuss/pkg/session"
 	"golang.org/x/oauth2"
 )
 

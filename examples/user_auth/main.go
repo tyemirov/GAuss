@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/temirov/GAuss/examples/user_auth/pkg/dash"
+	"github.com/tyemirov/GAuss/examples/user_auth/pkg/dash"
 	"html/template"
 	"log"
 	"net/http"
@@ -10,10 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/temirov/GAuss/pkg/constants"
-	"github.com/temirov/GAuss/pkg/gauss"
-	"github.com/temirov/GAuss/pkg/session"
-	"github.com/temirov/utils/system"
+	"github.com/tyemirov/GAuss/pkg/constants"
+	"github.com/tyemirov/GAuss/pkg/gauss"
+	"github.com/tyemirov/GAuss/pkg/session"
+	"github.com/tyemirov/utils/system"
 )
 
 const (

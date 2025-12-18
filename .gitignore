@@ -7,3 +7,5 @@
 qodana.yaml
 tools/
 bin/
+
+*apps.googleusercontent.com.json

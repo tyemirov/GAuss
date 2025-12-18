@@ -2,7 +2,7 @@ package dash
 
 import (
 	"github.com/gorilla/sessions"
-	"github.com/temirov/GAuss/pkg/constants"
+	"github.com/tyemirov/GAuss/pkg/constants"
 )
 
 type Service struct {
