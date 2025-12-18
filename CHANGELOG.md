@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.0.13] - 2025-12-18
+
+### Features ✨
+- _No changes._
+
+### Improvements ⚙️
+- Updated dependencies including Go version, Google API, OpenTelemetry, and internal utils
+- Refactored module namespace after owner rename
+- Enhanced CI workflow to use go.mod, added formatting and vet checks
+- Added gitignore entries to ignore Google JSON credentials and other environment files
+
+### Bug Fixes 🐛
+- _No changes._
+
+### Testing 🧪
+- _No changes._
+
+### Docs 📚
+- _No changes._
+
 ## [v0.0.12] - 2025-10-10
 ### Added
 - Introduced `WithLogoutRedirectURL` so applications can choose the post-logout redirect target while defaulting to the login page.
