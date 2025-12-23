@@ -1,6 +1,25 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.1.0] - 2025-12-23
+
+### Features ✨
+- _No changes._
+
+### Improvements ⚙️
+- Refactored module namespace following owner rename.
+- Updated dependency github.com/tyemirov/utils to v0.2.0.
+- Bumped google.golang.org/grpc to v1.78.0 and related dependencies.
+
+### Bug Fixes 🐛
+- _No changes._
+
+### Testing 🧪
+- _No changes._
+
+### Docs 📚
+- _No changes._
+
 ## [v0.0.13] - 2025-12-18
 
 ### Features ✨
